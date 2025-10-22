@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ResourceBot - Find Your Resources</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ========================================
+        CSS Variables & Theme Setup
+        ========================================
+        */
+        :root {
+            /* Light Mode (Default) */
+            --font-family: 'Inter', sans-serif;
+            --bg-color: #f8f9fa;
+            --bg-secondary: #ffffff;
+            --text-color: #212529;
+            --text-secondary: #6c757d;
+            --border-color: #dee2e6;
+            --primary-color: #198754;
+            --primary-hover: #157347;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        body.dark-mode {
+            /* Dark Mode Overrides */
+            --bg-color: #0d0c22;
+            --bg-secondary: #161530;
+            --text-color: #f8f9fa;
+            --text-secondary: #adb5bd;
+            --border-color: #343a40;
+            --primary-color: #8a4bff;
+            --primary-hover: #7b3aff;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+            /* Animated Starfield Background */
+            background-image: 
+                radial-gradient(1px 1px at 20px 30px, white, rgba(255,255,255,0)),
+                radial-gradient(1px 1px at 40px 70px, white, rgba(255,255,255,0)),
+                radial-gradient(1px 1px at 80px 120px, white, rgba(255,255,255,0)),
+                radial-gradient(1px 1px at 130px 190px, white, rgba(255,255,255,0)),
+                radial-gradient(2px 2px at 160px 240px, white, rgba(255,255,255,0));
+            background-repeat: repeat;
+            background-size: 250px 250px;
+            animation: move-stars 200s linear infinite;
+        }
+
+        @keyframes move-stars {
+            from { background-position: 0 0; }
+            to { background-position: -10000px 5000px; }
+        }
+
+        /* ========================================
+        Base & NEW Layout
+        ========================================
+        */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            height: 100%;
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            transition: background-color 0.3s ease, color 0.3s ease;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            
+            /* NEW: Full-height flex layout */
+            display: flex;
+            flex-direction: column;
+            height: 100vh; /* Full viewport height */
+            overflow: hidden; /* Prevent body scrolling */
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 0 20px;
+            width: 100%;
+        }
+        
+        /* NEW: Main content area (scrollable) */
+        main {
+            flex-grow: 1; /* Fills all available space */
+            overflow-y: auto; /* Allows only this section to scroll */
+            padding-bottom: 40px;
+        }
+
+        /* ========================================
+        Navbar (No changes)
+        ========================================
+        */
+        .navbar {
+            display: flex;
+            justify-content: center;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border-color);
+            transition: border-color 0.3s ease;
+            width: 100%;
+            background-color: var(--bg-color);
+            flex-shrink: 0; /* Prevent navbar from shrinking */
+        }
+        
+        .navbar-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+        
+        .nav-left, .nav-center, .nav-right {
+            flex: 1;
+        }
+        
+        .nav-center {
+            text-align: center;
+        }
+        
+        .nav-right {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-color);
+            text-decoration: none;
+        }
+
+        .nav-right a {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: color 0.2s ease;
+        }
+        
+        .nav-right a:hover {
+            color: var(--text-color);
+        }
+
+        .cta-button {
+            background-color: var(--primary-color);
+            color: #ffffff;
+            text-decoration: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: background-color 0.2s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .cta-button:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .theme-toggle {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        .theme-toggle:hover {
+            background-color: var(--pill-bg);
+            border-color: var(--text-secondary);
+        }
+        .theme-toggle svg {
+            width: 20px;
+            height: 20px;
+        }
+        .theme-toggle .icon-sun { display: none; }
+        .theme-toggle .icon-moon { display: block; }
+        body.dark-mode .theme-toggle .icon-sun { display: block; }
+        body.dark-mode .theme-toggle .icon-moon { display: none; }
+
+        /* ========================================
+        NEW: Chat Input Bar (at bottom)
+        ========================================
+        */
+        .chat-input-container {
+            flex-shrink: 0; /* Prevent from shrinking */
+            width: 100%;
+            padding: 24px 0;
+            background-color: var(--bg-color);
+            border-top: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .chat-input-container form {
+            display: flex;
+            gap: 12px;
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .chat-input-container input[type="text"] {
+            flex-grow: 1; /* Takes up available space */
+            padding: 14px 24px;
+            font-size: 1rem;
+            font-family: var(--font-family);
+            border: 1px solid var(--border-color);
+            border-radius: 50px; /* Full rounded border */
+            background-color: var(--bg-secondary);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+        
+        .chat-input-container input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 20%, transparent);
+        }
+
+        .chat-input-container .cta-button {
+             border-radius: 50px; /* Full rounded border */
+             padding-left: 24px;
+             padding-right: 24px;
+             flex-shrink: 0; /* Prevent button from shrinking */
+        }
+
+        /* ========================================
+        Results Section (Chat bubbles)
+        ========================================
+        */
+        
+        /* NEW: Welcome message for empty state */
+        #welcome-message {
+            text-align: center;
+            padding: 80px 0 40px;
+        }
+        #welcome-message h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 16px;
+        }
+        #welcome-message h1 strong {
+            color: var(--primary-color);
+        }
+        #welcome-message p {
+            font-size: 1.125rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+
+        #results {
+            padding: 40px 0;
+            display: grid;
+            gap: 20px;
+        }
+
+        .resource {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+
+        .resource:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        }
+        body.dark-mode .resource:hover {
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .resource h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .resource h3 a {
+            text-decoration: none;
+            color: var(--primary-color);
+            transition: color 0.2s ease;
+        }
+        .resource h3 a:hover {
+            text-decoration: underline;
+        }
+
+        .resource p {
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .resource small {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            opacity: 0.8;
+            word-break: break-all;
+        }
+
+        /* Loader & Messages */
+        .loader {
+            width: 48px;
+            height: 48px;
+            border: 5px solid var(--border-color);
+            border-bottom-color: var(--primary-color);
+            border-radius: 50%;
+            display: block;
+            margin: 40px auto;
+            animation: rotation 1s linear infinite;
+        }
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results-message {
+            text-align: center;
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            padding: 40px 0;
+            background-color: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+        .results-message.error {
+            color: #dc3545; /* Error red */
+        }
+        
+        /* Removed Footer */
+        
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="container navbar-container">
+            <div class="nav-left"></div>
+            <div class="nav-center">
+                <a href="#" class="logo">ResourceBot</a>
+            </div>
+            <div class="nav-right">
+                <a href="#">The Man Behind</a>
+                <button class="theme-toggle" id="theme-toggle" title="Toggle theme">
+                    <svg class="icon-moon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+                    </svg>
+                    <svg class="icon-sun" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-6.364-.386l1.591-1.591M3 12H.75m.386-6.364l1.591 1.591M12 6.375a5.625 5.625 0 11-11.25 0 5.625 5.625 0 0111.25 0z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        
+        <div id="welcome-message">
+             <h1>Your Universe of <strong>REAL</strong> Resources</h1>
+             <p>Ask about any tech topic to find roadmaps, tutorials, and curated links.</p>
+        </div>
+
+        <div id="results">
+            </div>
+    </main>
+
+    <div class="chat-input-container">
+        <form id="search-form">
+            <input type="text" id="query" placeholder="Ask about a resource (e.g., 'Frontend', 'React')" />
+            <button type="submit" class="cta-button">Fetch</button>
+        </form>
+    </div>
+
+    <script>
+        /*
+        ========================================
+        Theme Toggle JavaScript
+        ========================================
+        */
+        const themeToggle = document.getElementById('theme-toggle');
+        const body = document.body;
+
+        if (localStorage.getItem('theme') === 'dark') {
+            body.classList.add('dark-mode');
+        }
+
+        themeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+            if (body.classList.contains('dark-mode')) {
+                localStorage.setItem('theme', 'dark');
+            } else {
+                localStorage.setItem('theme', 'light');
+            }
+        });
+
+        /*
+        ========================================
+        API Fetch JavaScript (Modified)
+        ========================================
+        */
+        const searchForm = document.getElementById('search-form');
+        const queryInput = document.getElementById('query');
+        const resultsDiv = document.getElementById('results');
+        const welcomeMessage = document.getElementById('welcome-message'); // NEW
+
+        searchForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            fetchData();
+        });
+
+        async function fetchData() {
+            const query = queryInput.value.trim();
+            
+            // NEW: Hide welcome message on search
+            if (welcomeMessage) {
+                welcomeMessage.style.display = 'none';
+            }
+
+            if (!query) {
+                resultsDiv.innerHTML = `<div class="results-message error">Please enter a topic!</div>`;
+                return;
+            }
+
+            resultsDiv.innerHTML = '<div class="loader"></div>';
+
+            try {
+                const response = await fetch(`https://resources-bot.onrender.com/research?query=${encodeURIComponent(query)}`);
+                
+                if (!response.ok) {
+                    resultsDiv.innerHTML = `<div class="results-message error">Error: ${response.statusText}</div>`;
+                    return;
+                }
+
+                const data = await response.json();
+                resultsDiv.innerHTML = ""; // Clear loader
+
+                if (!data.resources || data.resources.length === 0) {
+                    resultsDiv.innerHTML = `<div class="results-message">No resources found for "${query}".</div>`;
+                    return;
+                }
+                
+                // NEW: Clear input after successful search
+                queryInput.value = '';
+
+                data.resources.forEach(r => {
+                    const div = document.createElement("div");
+                    div.className = "resource";
+                    div.innerHTML = `
+                        <h3><a href="${r.link}" target="_blank" rel="noopener noreferrer">${r.title}</a></h3>
+                        <p>${r.snippet}</p>
+                        <small>${r.link}</small>
+                    `;
+                    resultsDiv.appendChild(div);
+                });
+
+            } catch (err) {
+                console.error(err);
+                resultsDiv.innerHTML = `<div class="results-message error">An error occurred while fetching data.</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
